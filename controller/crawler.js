@@ -160,7 +160,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
         toTwoCountry = item[1].country;
         toTwoCode = item[1].code;
         let dest = [];
-        const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${toTwo},${ toTwoCountry }(${toTwoCode}),to:${end}, ${endCountry} (${endCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&d1=${toYear}-${toMonth}-${toDay}&passengers=adults:1,infantinlap:N`
+        const url = `https://www.expedia.com/Flights-Search?flight-type=on&mode=search&trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${toTwo},${ toTwoCountry }(${toTwoCode}),to:${end}, ${endCountry} (${endCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&d1=${toYear}-${toMonth}-${toDay}&passengers=adults:1,infantinlap:N`
         
         const [page, rawInfo] = await doCrawler(browser ,url)
         const extractInfo = [];
