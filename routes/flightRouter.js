@@ -6,6 +6,7 @@ const router = express.Router();
 router.post('/interval', flightTicketController.intervalDate);
 router.post('/sequence', flightTicketController.sequenceDate);
 router.post('/sequenceOpenJawDate', flightTicketController.sequenceOpenJawDate);
+router.post('/test', flightTicketController.test);
 
 // router
 // .route('/interval')

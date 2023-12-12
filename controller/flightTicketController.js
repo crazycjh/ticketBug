@@ -76,3 +76,13 @@ exports.sequenceOpenJawDate = function(req, res, next) {
     }
   }) 
 }
+
+
+exports.test = function (req, res, next) {
+  res.status(200).json({
+    status:'success',
+    data: {
+      message:'Test API'
+    }
+  }) 
+}
