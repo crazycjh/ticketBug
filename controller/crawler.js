@@ -1,5 +1,8 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const chromium = require('chromium');
+
+
 const { extractFlightInfo }  = require("./handleRawDate");
 const { writeToCSV } = require("./writeToCSV");
 
@@ -20,8 +23,11 @@ exports.crawler = async (dateTable, type, cities=[]) => {
   console.log('do crawler?'); 
   try {
     browser = await puppeteer.launch({
-      executablePath:
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
+      // executablePath:
+      //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
+      
+      //以module的方式安裝，避免在server上沒辦法執行
+      executablePath: chromium.path, 
       headless:true, // 根据需要设置为 true 或 false
     });
     
