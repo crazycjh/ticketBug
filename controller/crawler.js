@@ -16,8 +16,9 @@ puppeteer.use(StealthPlugin());
 console.log('do crawler?'); 
 exports.crawler = async (dateTable, type, cities=[]) => {
   // 啟動瀏覽器，可選擇開啟或關閉無頭模式
+  let browser;
   try {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       executablePath:
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
       headless:true, // 根据需要设置为 true 或 false
