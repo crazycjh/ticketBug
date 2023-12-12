@@ -18,7 +18,7 @@ const {getAirportCode} = require('./airPortCode');
 
     });
 
-    console.log(dateTable, [fromCode, toCode])
+    // console.log(dateTable, [fromCode, toCode])
     crawler(dateTable, 'RoundTrip', [fromCode, toCode]);
 
     res.status(200).json({
@@ -48,7 +48,7 @@ exports.sequenceOpenJawDate = function(req, res, next) {
 
   // const dateTable = getSequencDateTable(startYear,startMonth,startDay,endYear, endMonth, endDay);
   const dateTable = getSequencDateTable(yearStart,startMonth,startDay,yearEnd, endMonth,endDay ,interval);
-  console.log(dateTable);
+  // console.log(dateTable);
 
   // 取得 airport code
   const fromCode = getAirportCode(from);

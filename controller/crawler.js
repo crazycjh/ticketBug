@@ -13,10 +13,11 @@ puppeteer.use(StealthPlugin());
 // 同點進出  (要可以選擇去回機場)
 // 不同點進出 (要可以選擇去回機場) 台北到歐洲多點、亞洲多點到歐洲多點(還要搭配日期)，是要哪種作法？
 //
-console.log('do crawler?'); 
+
 exports.crawler = async (dateTable, type, cities=[]) => {
   // 啟動瀏覽器，可選擇開啟或關閉無頭模式
   let browser;
+  console.log('do crawler?'); 
   try {
     browser = await puppeteer.launch({
       executablePath:
