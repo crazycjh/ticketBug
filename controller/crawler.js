@@ -29,7 +29,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
       //以module的方式安裝，避免在server上沒辦法執行
       executablePath: chromium.path, 
       args: ['--lang=en-US'],
-      headless:true, // 根据需要设置为 true 或 false
+      headless:"new", // 根据需要设置为 true 或 false
     });
     
   }catch(error) {
