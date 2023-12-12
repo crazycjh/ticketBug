@@ -28,6 +28,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
       
       //以module的方式安裝，避免在server上沒辦法執行
       executablePath: chromium.path, 
+      args: ['--lang=en-US'],
       headless:true, // 根据需要设置为 true 或 false
     });
     
@@ -90,7 +91,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
           toCountry = item.country;
           toCode = item.code;
           let dest = [];
-          const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&trip=roundtrip&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&toDate=${toYear}/${toMonth}/${toDay}&d1=${fromYear}-${fromMonth}-${fromDay}&d2=${toYear}-${toMonth}-${toDay}&passengers=adults:${adultNum},infantinlap:N`
+          const url = `https://www.expedia.com/Flights-Search?flight-type=on&mode=search&trip=roundtrip&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&toDate=${toYear}/${toMonth}/${toDay}&d1=${fromYear}-${fromMonth}-${fromDay}&d2=${toYear}-${toMonth}-${toDay}&passengers=adults:${adultNum},infantinlap:N`
           const extractInfo = []
           const [page, rawInfo] = await doCrawler(browser ,url)
           
@@ -163,6 +164,8 @@ exports.crawler = async (dateTable, type, cities=[]) => {
         
         const [page, rawInfo] = await doCrawler(browser ,url)
         const extractInfo = [];
+        console.log('rawInfo');
+        console.log(rawInfo);
         let info = false;
         try {
           const travelDate = {fromYear, toYear, fromMonth, fromDay, toMonth, toDay}
