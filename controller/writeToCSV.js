@@ -44,10 +44,10 @@ exports.writeToCSV = (extractInfoArray, location, travelDate, type=false) => {
         append: fileExists
     });
 
-    csvWriter.writeRecords(extractInfoArray)
-    .then(() => {
+    // csvWriter.writeRecords(extractInfoArray)
+    // .then(() => {
         
-    });
+    // });
 }
 
 
