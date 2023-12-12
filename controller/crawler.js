@@ -12,7 +12,8 @@ puppeteer.use(StealthPlugin());
 // type : interval, sequence
 // 同點進出  (要可以選擇去回機場)
 // 不同點進出 (要可以選擇去回機場) 台北到歐洲多點、亞洲多點到歐洲多點(還要搭配日期)，是要哪種作法？
-// 
+//
+console.log('do crawler?'); 
 exports.crawler = async (dateTable, type, cities=[]) => {
   // 啟動瀏覽器，可選擇開啟或關閉無頭模式
   const browser = await puppeteer.launch({
@@ -20,6 +21,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
     headless:true, // 根据需要设置为 true 或 false
   });
+  console.log('do crawler? 222222');
 
   
   let from  = 'Taipei';
