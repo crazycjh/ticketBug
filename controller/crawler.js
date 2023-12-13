@@ -24,7 +24,8 @@ exports.crawler = async (dateTable, type, cities=[]) => {
       // executablePath:
       //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
       executablePath: chromium.path,
-      // headless:false, // 根据需要设置为 true 或 false
+      args: ['--no-sandbox']
+      // headless:'new', // 根据需要设置为 true 或 false
       // executablePath:executablePath(),
     });
   }catch (error) {
