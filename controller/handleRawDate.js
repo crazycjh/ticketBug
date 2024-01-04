@@ -13,8 +13,8 @@ exports.extractFlightInfo = (str, travelDate) => {
     const stops = str.match(/(Nonstop|One stop|Two stops)/)[1];
     const layoverInfo = str.match(/Layover for (.+?)(?=\.)|Layover for (.+?)$/g);
 
-    const fromDate = `${fromYear}/${fromMonth.toString().padStart(2, '0')}/${fromDay.toString().padStart(2, '0')}`;
-    const toDate = `${toYear}/${toMonth.toString().padStart(2, '0')}/${toDay.toString().padStart(2, '0')}`;
+    const fromDate = `${fromYear}${fromMonth.toString().padStart(2, '0')}${fromDay.toString().padStart(2, '0')}`;
+    const toDate = `${toYear}${toMonth.toString().padStart(2, '0')}${toDay.toString().padStart(2, '0')}`;
     if(price < 31000) {
         return { airline, fromDate, departureTime, departureLocation, toDate, arrivalTime, arrivalLocation, price, totalTime, stops, layoverInfo };
     }
