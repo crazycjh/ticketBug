@@ -89,26 +89,18 @@ const airportCode =
     { city: 'Sydney', country: '', code: 'SYD - Kingsford Smith Intl.' },
   ]
  
-exports.getAirportCode = (city)=> {
+exports.getAirportCode = (code)=> {
     let cityCode = ''
 
-    cityCode = airportCode.find(item => item.city === city)
+    cityCode = airportCode.find(item => item.code.toLowerCase.includes(code.toLowerCase) )
     if ( cityCode ) {
-        return cityCode
+      return cityCode
     }
     return '';
-    // const codeList = [];
-    
-    // console.log(cities);
-    // // ['Taipei',[]]
-    
-    // cities.forEach((city)=> {
-    //     console.log()
-    //     const found = airportCode.find(item => item.city === city)
-    //     if( found ) {
-    //         codeList.push(found)
-    //     }
-    // })
-    // console.log(codeList);
-    return codeList;
+
+}
+
+exports.CityToAirportCode = (city)=> {
+  let cityCode = airportCode.find((item)=> item.city === city)
+  return cityCode.code.split('-')[0].trim();
 }

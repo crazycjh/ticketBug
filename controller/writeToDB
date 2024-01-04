@@ -1,0 +1,51 @@
+const { ticketPrice } = require('../utility/db/dbPool')
+const { Op } = require("sequelize");
+
+
+const ticketHandle = async(type, query) => {
+    // 新增
+    
+    switch (type) {
+        case 'write':
+        try {
+            const resp = await ticketPrice.create({
+            
+                id:'2024123000004',
+                airport_1:'TPE',
+                airport_2:'BUD',
+                airport_3:'BUD',
+                airport_4:'TPE',
+                num:'4',
+                type:'0',
+                date_1:'202401020',
+                date_2:'20240301',
+                date_3:'',
+                date_4:'',
+                price:'25002',
+                });
+        }catch(error) {
+            console.error(error);
+        }
+        
+        break;
+    case 'read':
+        console.log('Orange selected');
+        break;
+    case 'update':
+        await User.update({ lastName: "Doe" }, {
+            where: {
+            lastName: null
+            }
+        });
+        break;
+    default:
+        console.log('Fruit not found');
+        break;
+
+    }
+    // 更新
+    // Change everyone without a last name to "Doe"
+    
+    // 讀取
+
+}

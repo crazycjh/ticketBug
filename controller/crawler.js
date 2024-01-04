@@ -1,6 +1,9 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const chromium = require('chromium');
+const { ticketPrice } = require('../utility/db/dbPool')
+const { Op } = require("sequelize");
+const { CityToAirportCode } = require('./airPortCode');
 
 const { extractFlightInfo }  = require("./handleRawDate");
 const { writeToCSV } = require("./writeToCSV");
@@ -25,7 +28,8 @@ exports.crawler = async (dateTable, type, cities=[]) => {
       //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
       executablePath: chromium.path,
       args: ['--no-sandbox']
-      // headless:'new', // 根据需要设置为 true 或 false
+      // headless:true, // 根据需要设置为 true 或 false
+      
       // executablePath:executablePath(),
     });
   }catch (error) {
@@ -86,6 +90,17 @@ exports.crawler = async (dateTable, type, cities=[]) => {
   // const destinations = [{to:'Prague', toCountry:'Czechia', toCode:'PRG-Vaclav Havel'}, {to:'Vienna', toCountry:'Austria', toCode:'VIE-Vienna Intl.'}, {to:'Munich', toCountry:'Germany', toCode:'MUC-All Airports'}];
 
   // const destinations = [{to:'Prague', toCountry:'Czechia', toCode:'PRG-Vaclav Havel', toTwo:'Budapest', toTwoCountry:'Hungary', toTwoCode:'BUD-Ferenc Liszt Intl.'}];
+  ticketPrice.sync().then(() => {
+    console.log('ticketPrice model synced successfully');
+  });
+  
+  let currentDate;
+  currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // 月份从0开始，所以加1
+  const day = String(currentDate.getDate()).padStart(2, '0');
+  let currentDateString = `${year}${month}${day}`
+  
   if(type==="RoundTrip"){
     let [fromCity, toCity] = cities;
 
@@ -122,14 +137,84 @@ exports.crawler = async (dateTable, type, cities=[]) => {
               })
               // 寫回csv
               
-              
-              if(type==="OpenJaw"){
-                dest = [fromCode.split("-")[0], toCode.split("-")[0], toTwoCode.split("-")[0]];
-              }else {
-                dest = [fromCode.split("-")[0], toCode.split("-")[0]];
+              if(extractInfo.length > 0) {
+                console.log(extractInfo[0]);
+                // if(type==="OpenJaw"){
+                //   dest = [fromCode.split("-")[0], toCode.split("-")[0], toTwoCode.split("-")[0]];
+                // }else {
+                //   dest = [fromCode.split("-")[0], toCode.split("-")[0]];
+                // }
+    
+                // writeToCSV(extractInfo, dest, travelDate);
+                
+                console.log('dododododod-----');
+                // 寫到資料庫 cpanel
+                
+                // 建立id 以YYYYMMDD00001 建立
+                const getId = await ticketPrice.findAll({
+                  attributes:['id'],
+                  where: {
+                    id: {
+                      [Op.like]: `${currentDateString}%`
+                    }
+                  },
+                  order: [
+                    // Will escape title and validate DESC against a list of valid direction parameters
+                    ['id', 'DESC']
+                  ],
+                  limit: 1
+                })
+                let newSeqNum;
+               
+                
+                if(getId[0]) {
+                  console.log('if if if if');
+                  const seqNum = getId[0].id;
+                  const lastFiveNum = seqNum.slice(-5);
+                  let newNum = parseInt(lastFiveNum, 10) + 1;
+                  newNum = newNum.toString().padStart(5, '0');
+                  newSeqNum = seqNum.slice(0, -5) + newNum;  
+                }else{      
+                  console.log('else else else');
+                  newSeqNum = `${currentDateString}00001`;
+                }
+                
+
+                // airline
+                // departureTime
+                // departureLocation
+                // arrivalTime
+                // arrivalLocation
+                // priceString
+                // price
+                // totalTime
+                // stops
+                // layoverInfo
+                
+                // fromDate
+                // toDate
+
+                console.log(CityToAirportCode(extractInfo[0].departureLocation));
+                const resp = await ticketPrice.create({
+                
+                    id:newSeqNum,
+                    airport_1:CityToAirportCode(extractInfo[0].departureLocation),
+                    airport_2:CityToAirportCode(extractInfo[0].arrivalLocation),
+                    airport_3:CityToAirportCode(extractInfo[0].arrivalLocation),
+                    airport_4:CityToAirportCode(extractInfo[0].departureLocation),
+                    num: 4,
+                    type: 0,
+                    date_1:extractInfo[0].fromDate,
+                    date_2:extractInfo[0].toDate,
+                    date_3:'',
+                    date_4:'',
+                    price:extractInfo[0].price,
+                    source:'Expedia',
+                    
+                  });
+                  // console.log('寫入');
+                  // console.log(resp);
               }
-  
-              writeToCSV(extractInfo, dest, travelDate);
               
               // console.log(extractInfo);   
               await page.waitForTimeout(1000 + Math.random() *5000);
@@ -180,6 +265,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
         const extractInfo = [];
         let info = false;
         try {
+          console.log(rawInfo.length);
           if(rawInfo) {
             const travelDate = {fromYear, toYear, fromMonth, fromDay, toMonth, toDay}
             rawInfo.forEach((rawItem)=> {
@@ -262,14 +348,15 @@ const doCrawler = async(page, url) => {
     $$eval('.uitk-card-link', elements => 
     elements.slice(0, 3).map(el => el.querySelector('span:first-child').textContent)
     );
-    console.log('rawInfo*****************------------------------------*****************');
-    console.log(rawInfo);
+    // console.log('rawInfo*****************------------------------------*****************');
+    // console.log(rawInfo);
 
     return [rawInfo];
 
 
   }catch(error) {
     console.log('發生錯誤拉 ',error);
+    return [];
   }
 
 }
