@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const cors = require('cors');
 
 require('dotenv').config();
 
@@ -17,7 +18,7 @@ const app = express();
 
 // 1) Global MIDDLEWARES
 app.use(helmet());
-
+app.use(cors());
 // development logging
 // if (process.env.NODE_ENV === 'development') {
 //   app.use(morgan('dev'));
