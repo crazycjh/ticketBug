@@ -8,5 +8,3 @@ flightCrawler/
 utility/db/queryAttribute
 utility/db/dbQuery.js
 controller/writeToCSV.js
-controller/writeToCSV.js
-controller/writeToCSV.js
