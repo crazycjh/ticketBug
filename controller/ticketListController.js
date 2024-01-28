@@ -1,8 +1,7 @@
-const { ticketPrice } = require('../utility/db/dbPool')
+const { ticketPrice } = require('../models/ticketPriceModel')
 const { Op, Sequelize } = require("sequelize");
 
 
-let dateSet = [];
 const cheapTicketList = async(req, res, next) => {
     console.log(req.query.type);
 
@@ -11,9 +10,10 @@ const cheapTicketList = async(req, res, next) => {
     let queryAttributes;
     let attributesAirport = [];
     let data=[];
-    let indexedData = [];
     let airportList = [];
     let airportSet = [];
+    let indexedData = [] ;
+    let dateSet = [];
     
 
     switch (req.query.type) {
@@ -47,7 +47,9 @@ const cheapTicketList = async(req, res, next) => {
                 where: whereCondition
             }
             data = await ticketPrice.findAll( queryAttributes )
-            indexedData = indexData(data,0)
+            const returnValue = indexData(data,0);
+            [indexedData, dateSet] = returnValue;
+            console.log(dateSet);
             // 取得 機場列表
             if((!req.query.airport1 && req.query.airport2) || (req.query.airport1 && !req.query.airport2)) {
                 queryAttributes = {
@@ -91,7 +93,7 @@ const cheapTicketList = async(req, res, next) => {
 
 function indexData(data, type) {
     // RT 以query的type來判斷
-
+    const dateSet = [];
     const indexedData = data.reduce((acc, item) => {
         // date
         let firstLevelIndex = item.date_1 + '-' + item.date_2;
@@ -117,8 +119,7 @@ function indexData(data, type) {
         acc[firstLevelIndex][secondLevelIndex].push(item);
         return acc;
         }, {})
-        console.log()
-        return indexedData;
+        return [indexedData, dateSet];
     }
     
 

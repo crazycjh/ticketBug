@@ -1,7 +1,9 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const chromium = require('chromium');
-const { ticketPrice } = require('../utility/db/dbPool')
+
+const { ticketPrice } = require('../models/ticketPriceModel')
+
 const { Op } = require("sequelize");
 const { CityToAirportCode } = require('./airPortCode');
 
@@ -28,7 +30,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
       //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
       executablePath: chromium.path,
       args: ['--no-sandbox']
-      // headless:true, // 根据需要设置为 true 或 false
+      // headless:false, // 根据需要设置为 true 或 false
       
       // executablePath:executablePath(),
     });
@@ -193,25 +195,37 @@ exports.crawler = async (dateTable, type, cities=[]) => {
                 
                 // fromDate
                 // toDate
-
-                console.log(CityToAirportCode(extractInfo[0].departureLocation));
-                const resp = await ticketPrice.create({
-                
-                    id:newSeqNum,
-                    airport_1:CityToAirportCode(extractInfo[0].departureLocation),
-                    airport_2:CityToAirportCode(extractInfo[0].arrivalLocation),
-                    airport_3:CityToAirportCode(extractInfo[0].arrivalLocation),
-                    airport_4:CityToAirportCode(extractInfo[0].departureLocation),
-                    num: 4,
-                    type: 0,
-                    date_1:extractInfo[0].fromDate,
-                    date_2:extractInfo[0].toDate,
-                    date_3:'',
-                    date_4:'',
-                    price:extractInfo[0].price,
-                    source:'Expedia',
+                console.log('有多少？ extractInfo');
+                console.log(extractInfo);
+                console.log(extractInfo[0].layoverInfo);
+                try {
+                    for(item of extractInfo) {
+                    const resp = await ticketPrice.create({
                     
-                  });
+                        createDate: currentDateString,
+                        airport_1:CityToAirportCode(item.departureLocation),
+                        airport_2:CityToAirportCode(item.arrivalLocation),
+                        airport_3:CityToAirportCode(item.arrivalLocation),
+                        airport_4:CityToAirportCode(item.departureLocation),
+                        num: 4,
+                        type: 0,
+                        date_1:item.fromDate,
+                        date_2:item.toDate,
+                        date_3:'',
+                        date_4:'',
+                        price:item.price,
+                        source:'Expedia',
+                        layover_info: item.layoverInfo,
+
+                       
+  
+                        
+                    });
+                  }
+
+                }catch(error) {
+                  console.error(error);
+                }
                   // console.log('寫入');
                   // console.log(resp);
               }
@@ -327,7 +341,7 @@ exports.crawler = async (dateTable, type, cities=[]) => {
   //   }      
 
   // }
-  // await browser.close();
+  await browser.close();
 };
 
 const doCrawler = async(page, url) => {

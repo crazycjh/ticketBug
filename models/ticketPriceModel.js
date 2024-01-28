@@ -1,21 +1,6 @@
 const {Sequelize, DataTypes} = require('sequelize');
+const sequelize = require('../utility/db/databaseConnect')
 
-// 连接到数据库
-// const sequelize = new Sequelize('snrsoixy_crawler', 'snrsoixy_andy', 'gcAndy855193', {
-//   host: '144.48.140.14',
-//   dialect: 'mysql'
-// });
-const sequelize = new Sequelize(process.env.DATABASE_DB, process.env.DATABASE_USERNAME, process.env.DATABASE_PASSWORD, {
-    host: process.env.DATABASE_HOST,
-    port: process.env.DATABASE_PORT,
-    dialect: 'mysql',
-    logging: false,
-});
-
-
-// 32272
-
-// 定义模型
 const ticketPrice = sequelize.define('ticketPrice', {
     id: {
         type: Sequelize.INTEGER,
@@ -45,9 +30,6 @@ const ticketPrice = sequelize.define('ticketPrice', {
     // metadata: {
     //     type: DataTypes.JSON
     // }
- 
-  
-  
 },
 {
     tableName: 'ticketPrice',
@@ -61,8 +43,3 @@ const ticketPrice = sequelize.define('ticketPrice', {
 
 
 module.exports = { ticketPrice };
-
-
-
-
-

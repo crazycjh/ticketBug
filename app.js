@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
+
 require('dotenv').config();
 
 // const mongoSanitize = require('express-mongo-sanitize');
@@ -10,9 +11,12 @@ require('dotenv').config();
 
 // const AppError = require('./utils/appError');
 // const globalErrorHandler = require('./controllers/errorController');
-const flightRouter = require('./routes/flightRouter');
+const flightRouters = require('./routes/flightRouters');
 const tickList = require('./routes/Frontend/ticketlist');
+const userRoutes = require('./routes/userRoutes')
 // const sequenceRouter = require('./routes/sequenceRoutes');
+
+
 
 const app = express();
 
@@ -49,8 +53,10 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-app.use('/api/v1/flightTicket', flightRouter);
+app.use('/api/v1/flightTicket', flightRouters);
 app.use('/api/v1/ticketList', tickList);
+app.use('/api/v1/users', userRoutes);
+
 // app.use('/api/v1/sequence', sequenceRouter);
 
 app.all('*', (req, res, next) => {
@@ -61,3 +67,4 @@ app.all('*', (req, res, next) => {
 // app.use(globalErrorHandler);
 
 module.exports = app;
+

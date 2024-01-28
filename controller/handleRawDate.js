@@ -11,7 +11,7 @@ exports.extractFlightInfo = (str, travelDate) => {
     const price = Number(priceString.replace(/NT\$/, '').replace(/,/, ''));
     const totalTime = str.match(/(\d+ hours \d+ minutes) total travel time/)[1];
     const stops = str.match(/(Nonstop|One stop|Two stops)/)[1];
-    const layoverInfo = str.match(/Layover for (.+?)(?=\.)|Layover for (.+?)$/g);
+    const layoverInfo = str.match(/Layover for (.+?)(?=\.)|Layover for (.+?)$/g)[0];
 
     const fromDate = `${fromYear}${fromMonth.toString().padStart(2, '0')}${fromDay.toString().padStart(2, '0')}`;
     const toDate = `${toYear}${toMonth.toString().padStart(2, '0')}${toDay.toString().padStart(2, '0')}`;
