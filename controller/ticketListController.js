@@ -89,6 +89,7 @@ const cheapTicketList = async(req, res, next) => {
         status: 'success',
         data:{data : indexedData, airportSet:airportSet, dateSet:Object.keys(dateSet)}
     });
+
 }
 
 function indexData(data, type) {
