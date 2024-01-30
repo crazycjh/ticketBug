@@ -44,7 +44,10 @@ const cheapTicketList = async(req, res, next) => {
 
             queryAttributes = {
                 attributes: ['id', 'airport_1', 'airport_2', 'airport_3',  'airport_4', 'date_1', 'date_2', 'price', 'type','layover_info' ,'createDate'],
-                where: whereCondition
+                where: whereCondition,
+                order: [
+                    ['date_1', 'ASC'] // 根据 date_1 升序排序
+                ]
             }
             data = await ticketPrice.findAll( queryAttributes )
             const returnValue = indexData(data,0);
@@ -120,6 +123,7 @@ function indexData(data, type) {
         acc[firstLevelIndex][secondLevelIndex].push(item);
         return acc;
         }, {})
+        dateSet.sort();
         return [indexedData, dateSet];
     }
     
