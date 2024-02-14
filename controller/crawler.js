@@ -8,7 +8,7 @@ const { Op } = require("sequelize");
 const { CityToAirportCode } = require('./airPortCode');
 
 const { extractFlightInfo }  = require("./handleRawDate");
-const { writeToCSV } = require("./writeToCSV");
+const { createNotifyList } = require('../utility/notification/useNotification')
 
 
 
@@ -153,33 +153,32 @@ exports.crawler = async (dateTable, type, cities=[]) => {
                 // 寫到資料庫 cpanel
                 
                 // 建立id 以YYYYMMDD00001 建立
-                const getId = await ticketPrice.findAll({
-                  attributes:['id'],
-                  where: {
-                    id: {
-                      [Op.like]: `${currentDateString}%`
-                    }
-                  },
-                  order: [
-                    // Will escape title and validate DESC against a list of valid direction parameters
-                    ['id', 'DESC']
-                  ],
-                  limit: 1
-                })
-                let newSeqNum;
+                // const getId = await ticketPrice.findAll({
+                //   attributes:['id'],
+                //   where: {
+                //     id: {
+                //       [Op.like]: `${currentDateString}%`
+                //     }
+                //   },
+                //   order: [
+                //     // Will escape title and validate DESC against a list of valid direction parameters
+                //     ['id', 'DESC']
+                //   ],
+                //   limit: 1
+                // })
+                // let newSeqNum;
                
                 
-                if(getId[0]) {
-                  console.log('if if if if');
-                  const seqNum = getId[0].id;
-                  const lastFiveNum = seqNum.slice(-5);
-                  let newNum = parseInt(lastFiveNum, 10) + 1;
-                  newNum = newNum.toString().padStart(5, '0');
-                  newSeqNum = seqNum.slice(0, -5) + newNum;  
-                }else{      
-                  console.log('else else else');
-                  newSeqNum = `${currentDateString}00001`;
-                }
+                // if(getId[0]) {
+                //   const seqNum = getId[0].id;
+                //   const lastFiveNum = seqNum.slice(-5);
+                //   let newNum = parseInt(lastFiveNum, 10) + 1;
+                //   newNum = newNum.toString().padStart(5, '0');
+                //   newSeqNum = seqNum.slice(0, -5) + newNum;  
+                // }else{      
+                //   console.log('else else else');
+                //   newSeqNum = `${currentDateString}00001`;
+                // }
                 
 
                 // airline
@@ -199,30 +198,45 @@ exports.crawler = async (dateTable, type, cities=[]) => {
                 console.log(extractInfo);
                 console.log(extractInfo[0].layoverInfo);
                 try {
-                    for(item of extractInfo) {
-                    const resp = await ticketPrice.create({
+                    let airport_1;
+                    let airport_2;
+                    let airport_3;
+                    let airport_4;
+                    let date_1;
+                    let date_2;
+                    let price;
+                    let source;
                     
+                    for(item of extractInfo) {
+                    airport_1 = CityToAirportCode(item.departureLocation);
+                    airport_2 = CityToAirportCode(item.arrivalLocation);
+                    airport_3 = CityToAirportCode(item.arrivalLocation);
+                    airport_4 = CityToAirportCode(item.departureLocation);
+                    date_1 = item.fromDate;
+                    date_2 = item.toDate;
+                    price = item.price;
+                    source = 'Expedia';
+                    const resp = await ticketPrice.create({
                         createDate: currentDateString,
-                        airport_1:CityToAirportCode(item.departureLocation),
-                        airport_2:CityToAirportCode(item.arrivalLocation),
-                        airport_3:CityToAirportCode(item.arrivalLocation),
-                        airport_4:CityToAirportCode(item.departureLocation),
+                        airport_1,
+                        airport_2,
+                        airport_3,
+                        airport_4,
                         num: 4,
                         type: 0,
-                        date_1:item.fromDate,
-                        date_2:item.toDate,
+                        date_1,
+                        date_2,
                         date_3:'',
                         date_4:'',
-                        price:item.price,
-                        source:'Expedia',
-                        layover_info: item.layoverInfo,
-
-                       
-  
-                        
+                        price,
+                        source,
+                        layover_info: item.layoverInfo,      
                     });
                   }
-
+                  // 取出extractInfo 裡面的第一筆資料寫進tickNotifyList table
+                  // 
+                  const params = {airport:[airport_1, airport_2, airport_3, airport_4],currentDateString , type:'0', date:[date_1, date_2],price, source}
+                  createNotifyList(params);
                 }catch(error) {
                   console.error(error);
                 }

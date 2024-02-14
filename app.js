@@ -1,10 +1,24 @@
 const express = require('express');
+const http = require('http');
+
+// websocket
+const { WebSocketServer } = require('ws');
+
+// redis
+const redis = require('redis');
+const { publishNotification } = require('./service/redis/redis')
+const { subscriber } = require('./service/redis/subscribeRedis')
+const { socketList } = require('./service/redis/socketRedis')
+
+const { dayliyPushNotification } = require('./service/scheduler/pushNotification')
+
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
 
 require('dotenv').config();
+
 
 // const mongoSanitize = require('express-mongo-sanitize');
 // const xssClean = require('xss-clean')
@@ -19,6 +33,7 @@ const userRoutes = require('./routes/userRoutes')
 
 
 const app = express();
+const server = http.createServer(app);
 
 // 1) Global MIDDLEWARES
 app.use(helmet());
@@ -27,6 +42,60 @@ app.use(cors());
 // if (process.env.NODE_ENV === 'development') {
 //   app.use(morgan('dev'));
 // }
+// 執行每日推播
+console.log('每日推播');
+dayliyPushNotification();
+
+// 建立WebSocket
+const wss = new WebSocketServer({ server })
+
+wss.on('connection', function connection(ws) {
+  // setInterval(()=> {
+    ws.send('Welcom to the WebSocket Server');
+  // }, 2000)
+  
+  ws.on('message', async function message(data) {
+    const clientData = JSON.parse(data)
+    const email = clientData.email;
+    try{
+
+      // 這裡會有唯一的client傳過來message，會是傳遞使用者名稱
+      if(email) {
+        // 做subscribe
+        const channelId = `notifications:${email}` 
+        console.log('subscriber ',channelId)
+        subscriber.subscribe(channelId, (message) => {
+          ws.send(message);
+        });
+        socketList.hSet('user_statuses', email, 'online');
+        console.log('socketList get');
+        console.log(await socketList.hGet('user_statuses', email));
+        setTimeout(()=> {
+          if(clientData.email === 'crazycjh@gmail.com') {
+            publishNotification(email, 'this is test')
+            
+          }
+        },2000)
+        ws.on('close', () => {
+          // unsubscribe ，要加上ping pong 檢查連線時，若是斷線則unsubscribe
+          console.log('websocket disconneted');
+          if(subscriber) {
+            subscriber.unsubscribe();
+            subscriber.quit();
+            // 把登入狀態移除
+            socketList.hDel('user_statuses', email);
+          }
+        })
+        // 當redis publish時
+        
+      }
+    }catch(error){
+      console.error(error);
+    }
+    
+  });
+  
+})
 
 // // limit requests from same API
 // const limiter = rateLimit({
@@ -66,5 +135,5 @@ app.all('*', (req, res, next) => {
 
 // app.use(globalErrorHandler);
 
-module.exports = app;
+module.exports = server;
 

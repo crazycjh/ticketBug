@@ -14,6 +14,7 @@ const UserInfo = sequelize.define('UserInfo', {
     passwordResetToken:DataTypes.STRING,
     passwordResetExpires:DataTypes.DATE,
     google: DataTypes.BOOLEAN,
+    isRead: DataTypes.BOOLEAN
     
 },
 {

@@ -42,6 +42,8 @@ const createSendToken = ( email, statusCode, res ) => {
     if(process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
     res.cookie('jwt', token, cookieOptions);
+    res.cookie('isLogin', true);
+    res.cookie('email', email);
     
     res.status(statusCode).redirect('http://localhost:5173/membercenter');
 
