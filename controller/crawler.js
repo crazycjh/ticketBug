@@ -1,16 +1,15 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
-const chromium = require('chromium');
+const chromium = require("chromium");
 
-const { ticketPrice } = require('../models/ticketPriceModel')
+const { ticketPrice } = require("../models/ticketPriceModel");
 
 const { Op } = require("sequelize");
-const { CityToAirportCode } = require('./airPortCode');
+const { CityToAirportCode } = require("./airPortCode");
 
-const { extractFlightInfo }  = require("./handleRawDate");
-const { createNotifyList } = require('../utility/notification/useNotification')
-
-
+const { extractFlightInfo } = require("./handleRawDate");
+const { createNotifyList } = require("../utility/notification/useNotification");
+const { roundTripCrawler } = require("../flightCrawler/roundTripOpenJawCrawler");
 
 puppeteer.use(StealthPlugin());
 
@@ -20,374 +19,348 @@ puppeteer.use(StealthPlugin());
 // type : interval, sequence
 // 同點進出  (要可以選擇去回機場)
 // 不同點進出 (要可以選擇去回機場) 台北到歐洲多點、亞洲多點到歐洲多點(還要搭配日期)，是要哪種作法？
-// 
-exports.crawler = async (dateTable, type, cities=[]) => {
-  // 啟動瀏覽器，可選擇開啟或關閉無頭模式
-  let browser;
-  try {
-    browser = await puppeteer.launch({
-      // executablePath:
-      //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
-      executablePath: chromium.path,
-      args: ['--no-sandbox']
-      // headless:false, // 根据需要设置为 true 或 false
-      
-      // executablePath:executablePath(),
-    });
-  }catch (error) {
-    console.log('puppeteer 出事拉',error);
-  }
-  
+//
+exports.crawler = async (dateTable, type, cities = []) => {
+	// 啟動瀏覽器，可選擇開啟或關閉無頭模式
+	let browser;
+	try {
+		browser = await puppeteer.launch({
+			// executablePath:
+			//   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
+			executablePath: chromium.path,
+			args: ["--no-sandbox"]
+			// headless: false, // 根据需要设置为 true 或 false
 
+			// executablePath:executablePath(),
+		});
+	} catch (error) {
+		console.log("puppeteer 出事拉", error);
+	}
 
-  
-  let from  = 'Taipei';
-  let fromCountry = 'Taiwan';
-  let fromCode = 'TPE-Taoyuan Intl.'
-  let fromYear = '2024'
-  let fromMonth = '04'
-  let fromDay = '09'
+	let from = "Taipei";
+	let fromCountry = "Taiwan";
+	let fromCode = "TPE-Taoyuan Intl.";
+	let fromYear = "2024";
+	let fromMonth = "04";
+	let fromDay = "09";
 
-  let to = '';
-  let toCountry = '';
-  let toCode = '';
-  let toYear = '2024'
-  let toMonth = '04'
-  let toDay = '24'
+	let to = "";
+	let toCountry = "";
+	let toCode = "";
+	let toYear = "2024";
+	let toMonth = "04";
+	let toDay = "24";
 
-  let toTwo = '';
-  let toTwoCountry = '';
-  let toTwoCode = '';
-  let end = '';
-  let endCountry = '';
-  let endCode = '';
-  
+	let toTwo = "";
+	let toTwoCountry = "";
+	let toTwoCode = "";
+	let end = "";
+	let endCountry = "";
+	let endCode = "";
 
-  let adultNum = 1;
-  let urlList = [];
-  let destCodeList = [];
-  
-  const page = await browser.newPage();
+	let adultNum = 1;
+	let urlList = [];
+	let destCodeList = [];
 
-  // await page.goto(`https://www.expedia.com.tw`,{waitUntil: 'load'});
-  
-  // const cookies = await page.cookies();
-  // const expediaCookie = cookies.find((cookie)=>  cookie.name === 'CRQS')
-  
-  // if( expediaCookie ) {
-  //   expediaCookie.value = 't|62`s|62`l|en_US`c|TWD';
-  // }
+	const page = await browser.newPage();
 
-  // // 設定語言
-  // await page.setExtraHTTPHeaders({
-  //   'Accept-Language': 'en-US,en;q=0.9'
-  // });
+	// await page.goto(`https://www.expedia.com.tw`,{waitUntil: 'load'});
 
-  // await page.waitForTimeout(500);
-  // console.log('expediaCookie : ===== ', expediaCookie);
+	// const cookies = await page.cookies();
+	// const expediaCookie = cookies.find((cookie)=>  cookie.name === 'CRQS')
 
- // 寫一個可以處理date的function
- 
+	// if( expediaCookie ) {
+	//   expediaCookie.value = 't|62`s|62`l|en_US`c|TWD';
+	// }
 
-  // const destinations = [{to:'Prague', toCountry:'Czechia', toCode:'PRG-Vaclav Havel'}, {to:'Vienna', toCountry:'Austria', toCode:'VIE-Vienna Intl.'}, {to:'Munich', toCountry:'Germany', toCode:'MUC-All Airports'}];
+	// // 設定語言
+	// await page.setExtraHTTPHeaders({
+	//   'Accept-Language': 'en-US,en;q=0.9'
+	// });
 
-  // const destinations = [{to:'Prague', toCountry:'Czechia', toCode:'PRG-Vaclav Havel', toTwo:'Budapest', toTwoCountry:'Hungary', toTwoCode:'BUD-Ferenc Liszt Intl.'}];
-  ticketPrice.sync().then(() => {
-    console.log('ticketPrice model synced successfully');
-  });
-  
-  let currentDate;
-  currentDate = new Date();
-  const year = currentDate.getFullYear();
-  const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // 月份从0开始，所以加1
-  const day = String(currentDate.getDate()).padStart(2, '0');
-  let currentDateString = `${year}${month}${day}`
-  
-  if(type==="RoundTrip"){
-    let [fromCity, toCity] = cities;
+	// await page.waitForTimeout(500);
+	// console.log('expediaCookie : ===== ', expediaCookie);
 
-    for (const date of dateTable){
-        fromYear = date.startY;
-        fromMonth = date.startM;
-        fromDay = date.startD; 
-        toYear = date.endY;
-        toMonth = date.endM;
-        toDay = date.endD;
-        
-        from = fromCity.city;
-        fromCountry = fromCity.country;
-        fromCode = fromCity.code;
-        for (item of toCity) {
-          to = item.city;
-          toCountry = item.country;
-          toCode = item.code;
-          const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&trip=roundtrip&langid=1033&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&toDate=${toYear}/${toMonth}/${toDay}&d1=${fromYear}-${fromMonth}-${fromDay}&d2=${toYear}-${toMonth}-${toDay}&passengers=adults:${adultNum},infantinlap:N`
-          const extractInfo = []
-          
-          const [rawInfo] = await doCrawler(page ,url)
+	// 寫一個可以處理date的function
 
-          try {
-            const travelDate = {fromYear, toYear, fromMonth, fromDay, toMonth, toDay}
-            if(rawInfo) {
-              rawInfo.forEach((rawItem)=> {
-                // 提取 Expedia 機票資訊
-                const info = extractFlightInfo(rawItem, travelDate);
-                if(info){
-                  extractInfo.push(info);  
-                }
-                
-              })
-              // 寫回csv
-              
-              if(extractInfo.length > 0) {
-                console.log(extractInfo[0]);
-                // if(type==="OpenJaw"){
-                //   dest = [fromCode.split("-")[0], toCode.split("-")[0], toTwoCode.split("-")[0]];
-                // }else {
-                //   dest = [fromCode.split("-")[0], toCode.split("-")[0]];
-                // }
-    
-                // writeToCSV(extractInfo, dest, travelDate);
-                
-                console.log('dododododod-----');
-                // 寫到資料庫 cpanel
-                
-                // 建立id 以YYYYMMDD00001 建立
-                // const getId = await ticketPrice.findAll({
-                //   attributes:['id'],
-                //   where: {
-                //     id: {
-                //       [Op.like]: `${currentDateString}%`
-                //     }
-                //   },
-                //   order: [
-                //     // Will escape title and validate DESC against a list of valid direction parameters
-                //     ['id', 'DESC']
-                //   ],
-                //   limit: 1
-                // })
-                // let newSeqNum;
-               
-                
-                // if(getId[0]) {
-                //   const seqNum = getId[0].id;
-                //   const lastFiveNum = seqNum.slice(-5);
-                //   let newNum = parseInt(lastFiveNum, 10) + 1;
-                //   newNum = newNum.toString().padStart(5, '0');
-                //   newSeqNum = seqNum.slice(0, -5) + newNum;  
-                // }else{      
-                //   console.log('else else else');
-                //   newSeqNum = `${currentDateString}00001`;
-                // }
-                
+	// const destinations = [{to:'Prague', toCountry:'Czechia', toCode:'PRG-Vaclav Havel'}, {to:'Vienna', toCountry:'Austria', toCode:'VIE-Vienna Intl.'}, {to:'Munich', toCountry:'Germany', toCode:'MUC-All Airports'}];
 
-                // airline
-                // departureTime
-                // departureLocation
-                // arrivalTime
-                // arrivalLocation
-                // priceString
-                // price
-                // totalTime
-                // stops
-                // layoverInfo
-                
-                // fromDate
-                // toDate
-                console.log('有多少？ extractInfo');
-                console.log(extractInfo);
-                console.log(extractInfo[0].layoverInfo);
-                try {
-                    let airport_1;
-                    let airport_2;
-                    let airport_3;
-                    let airport_4;
-                    let date_1;
-                    let date_2;
-                    let price;
-                    let source;
-                    
-                    for(item of extractInfo) {
-                    airport_1 = CityToAirportCode(item.departureLocation);
-                    airport_2 = CityToAirportCode(item.arrivalLocation);
-                    airport_3 = CityToAirportCode(item.arrivalLocation);
-                    airport_4 = CityToAirportCode(item.departureLocation);
-                    date_1 = item.fromDate;
-                    date_2 = item.toDate;
-                    price = item.price;
-                    source = 'Expedia';
-                    const resp = await ticketPrice.create({
-                        createDate: currentDateString,
-                        airport_1,
-                        airport_2,
-                        airport_3,
-                        airport_4,
-                        num: 4,
-                        type: 0,
-                        date_1,
-                        date_2,
-                        date_3:'',
-                        date_4:'',
-                        price,
-                        source,
-                        layover_info: item.layoverInfo,      
-                    });
-                  }
-                  // 取出extractInfo 裡面的第一筆資料寫進tickNotifyList table
-                  // 
-                  const params = {airport:[airport_1, airport_2, airport_3, airport_4],currentDateString , type:'0', date:[date_1, date_2],price, source}
-                  createNotifyList(params);
-                }catch(error) {
-                  console.error(error);
-                }
-                  // console.log('寫入');
-                  // console.log(resp);
-              }
-              
-              // console.log(extractInfo);   
-              await page.waitForTimeout(1000 + Math.random() *5000);
-            }
-  
-          }catch (error) {
-            console.log(error, ' 寫入發生錯誤')
-          }
-        }
-       
-    }
-    
-    
-    
-  }else if (type==="OpenJaw") {
-    let [fromCity, toCity, endCity] = cities;
+	// const destinations = [{to:'Prague', toCountry:'Czechia', toCode:'PRG-Vaclav Havel', toTwo:'Budapest', toTwoCountry:'Hungary', toTwoCode:'BUD-Ferenc Liszt Intl.'}];
+	ticketPrice.sync().then(() => {
+		console.log("ticketPrice model synced successfully");
+	});
 
-    for (const date of dateTable){
-      fromYear = date.startY;
-      fromMonth = date.startM;
-      fromDay = date.startD; 
-      toYear = date.endY;
-      toMonth = date.endM;
-      toDay = date.endD;
-      
-      from = fromCity.city;
-      fromCountry = fromCity.country;
-      fromCode = fromCity.code;
-      
-      end = endCity.city;
-      endCountry = endCity.country;
-      endCode = endCity.code;
-      
-      
-    
-      for(item of toCity) {
-        to = item[0].city;
-        toCountry = item[0].country;
-        toCode = item[0].code;
-        toTwo = item[1].city;
-        toTwoCountry = item[1].country;
-        toTwoCode = item[1].code;
-        
-        const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&langid=1033&trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${toTwo},${ toTwoCountry }(${toTwoCode}),to:${end}, ${endCountry} (${endCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&d1=${toYear}-${toMonth}-${toDay}&passengers=adults:1,infantinlap:N`
+	let currentDate;
+	currentDate = new Date();
+	const year = currentDate.getFullYear();
+	const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // 月份从0开始，所以加1
+	const day = String(currentDate.getDate()).padStart(2, "0");
+	let currentDateString = `${year}${month}${day}`;
 
-        
-        const [rawInfo] = await doCrawler(page ,url)
-        const extractInfo = [];
-        let info = false;
-        try {
-          console.log(rawInfo.length);
-          if(rawInfo) {
-            const travelDate = {fromYear, toYear, fromMonth, fromDay, toMonth, toDay}
-            rawInfo.forEach((rawItem)=> {
-              // 提取 Expedia 機票資訊
-              info = extractFlightInfo(rawItem, travelDate);
-              if(info){
-                extractInfo.push(info);  
-              }
-            })
-            // 寫回csv
-            console.log(extractInfo)
-            if(extractInfo.length > 0) {
-              if(type==="OpenJaw"){
-                dest = [fromCode.split("-")[0], toCode.split("-")[0], toTwoCode.split("-")[0], endCode.split("-")[0]];
-              }else {
-                dest = [fromCode.split("-")[0], toCode.split("-")[0]];
-              }
-              console.log(dest);
-              writeToCSV(extractInfo, dest, travelDate);
-              
-              // console.log(extractInfo);   
-              await page.waitForTimeout(1000 + Math.random() *5000);
-          }
-            
-          }
+	if (type === "RoundTrip") {
+    await roundTripCrawler(cities, dateTable, page);
+		// let [fromCity, toCity] = cities;
 
-        }catch (error) {
-          console.log(error, ' 寫入發生錯誤')
-        }
-      }
-      
-    }
-  }
-  
-  
+		// for (const date of dateTable) {
+		// 	fromYear = date.startY;
+		// 	fromMonth = date.startM;
+		// 	fromDay = date.startD;
+		// 	toYear = date.endY;
+		// 	toMonth = date.endM;
+		// 	toDay = date.endD;
 
+		// 	from = fromCity.city;
+		// 	fromCountry = fromCity.country;
+		// 	fromCode = fromCity.code;
+		// 	for (const item of toCity) {
+		// 		to = item.city;
+		// 		toCountry = item.country;
+		// 		toCode = item.code;
+		// 		const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&trip=roundtrip&langid=1033&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${toCountry}(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&toDate=${toYear}/${toMonth}/${toDay}&d1=${fromYear}-${fromMonth}-${fromDay}&d2=${toYear}-${toMonth}-${toDay}&passengers=adults:${adultNum},infantinlap:N`;
+		// 		const extractInfo = [];
 
-  // for (const date of dateTable){
-  //   for (const item of destinations)  {
-  //     to = item.to;
-  //     toCountry = item.toCountry;
-  //     toCode = item.toCode;
-      
-      
-  //     fromMonth = date.startM;
-  //     fromDay = date.startD; 
-  //     toMonth = date.endM;
-  //     toDay = date.endD;
-  //     const url = `https://www.expedia.com.tw/Flights-Search?
-  //   flight-type=on&mode=search
-  //   &trip=roundtrip&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&
-  //   fromDate=${fromYear}/${fromMonth}/${fromDay}&toDate=${toYear}/${toMonth}/${toDay}&d1=${fromYear}-${fromMonth}-${fromDay}&d2=${toYear}-${toMonth}-${toDay}&passengers=adults:${adultNum},infantinlap:N`
-    
-    // console.log(html);
-  //   const text = await page.evaluate(() => {
-  //     return new XMLSerializer().serializeToString(document);
-  // });
-  // console.log(text);
-  //   }      
+		// 		const [rawInfo] = await doCrawler(page, url);
 
-  // }
-  await browser.close();
+		// 		try {
+		// 			const travelDate = {
+		// 				fromYear,
+		// 				toYear,
+		// 				fromMonth,
+		// 				fromDay,
+		// 				toMonth,
+		// 				toDay
+		// 			};
+
+		// 			if (rawInfo) {
+		// 				rawInfo.forEach((rawItem) => {
+		// 					// 提取 Expedia 機票資訊
+		// 					const info = extractFlightInfo(rawItem, travelDate);
+		// 					if (info) {
+		// 						extractInfo.push(info);
+		// 					}
+		// 				});
+		// 				// 寫回csv
+
+		// 				if (extractInfo.length > 0) {
+		// 					console.log(extractInfo[0]);
+		// 					// if(type==="OpenJaw"){
+		// 					//   dest = [fromCode.split("-")[0], toCode.split("-")[0], toTwoCode.split("-")[0]];
+		// 					// }else {
+		// 					//   dest = [fromCode.split("-")[0], toCode.split("-")[0]];
+		// 					// }
+
+		// 					// writeToCSV(extractInfo, dest, travelDate);
+
+		// 					console.log("dododododod-----");
+
+		// 					console.log(extractInfo[0].layoverInfo);
+		// 					try {
+		// 						let airport_1;
+		// 						let airport_2;
+		// 						let airport_3;
+		// 						let airport_4;
+		// 						let date_1;
+		// 						let date_2;
+		// 						let price;
+		// 						let source;
+
+		// 						for (const item of extractInfo) {
+		// 							airport_1 = CityToAirportCode(
+		// 								item.departureLocation
+		// 							);
+		// 							airport_2 = CityToAirportCode(
+		// 								item.arrivalLocation
+		// 							);
+		// 							airport_3 = CityToAirportCode(
+		// 								item.arrivalLocation
+		// 							);
+		// 							airport_4 = CityToAirportCode(
+		// 								item.departureLocation
+		// 							);
+		// 							date_1 = item.fromDate;
+		// 							date_2 = item.toDate;
+		// 							price = item.price;
+		// 							source = "Expedia";
+		// 							const resp = await ticketPrice.create({
+		// 								createDate: currentDateString,
+		// 								airport_1,
+		// 								airport_2,
+		// 								airport_3,
+		// 								airport_4,
+		// 								num: 4,
+		// 								type: 0,
+		// 								date_1,
+		// 								date_2,
+		// 								date_3: "",
+		// 								date_4: "",
+		// 								price,
+		// 								source,
+		// 								layover_info: item.layoverInfo
+		// 							});
+		// 						}
+		// 						// 取出extractInfo 裡面的第一筆資料寫進tickNotifyList table
+		// 						//
+		// 						const params = {
+		// 							airport: [
+		// 								airport_1,
+		// 								airport_2,
+		// 								airport_3,
+		// 								airport_4
+		// 							],
+		// 							currentDateString,
+		// 							type: "0",
+		// 							date: [date_1, date_2],
+		// 							price,
+		// 							source
+		// 						};
+		// 						createNotifyList(params);
+		// 					} catch (error) {
+		// 						console.error(error);
+		// 					}
+		// 					// console.log('寫入');
+		// 					// console.log(resp);
+		// 				}
+
+		// 				// console.log(extractInfo);
+		// 				await page.waitForTimeout(1000 + Math.random() * 5000);
+		// 			}
+		// 		} catch (error) {
+		// 			console.log(error, " 寫入發生錯誤");
+		// 		}
+		// 	}
+		// }
+	} else if (type === "OpenJaw") {
+		let [fromCity, toCity, endCity] = cities;
+		console.log(cities);
+		console.log(dateTable);
+		for (const date of dateTable) {
+			fromYear = date.startY;
+			fromMonth = date.startM;
+			fromDay = date.startD;
+			toYear = date.endY;
+			toMonth = date.endM;
+			toDay = date.endD;
+
+			from = fromCity.city;
+			fromCountry = fromCity.country;
+			fromCode = fromCity.code;
+
+			end = endCity.city;
+			endCountry = endCity.country;
+			endCode = endCity.code;
+
+			for (const item of toCity) {
+				to = item[0].city;
+				toCountry = item[0].country;
+				toCode = item[0].code;
+				toTwo = item[1].city;
+				toTwoCountry = item[1].country;
+				toTwoCode = item[1].code;
+
+				const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&langid=1033&trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${toCountry}(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${toTwo},${toTwoCountry}(${toTwoCode}),to:${end}, ${endCountry} (${endCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&d1=${toYear}-${toMonth}-${toDay}&passengers=adults:1,infantinlap:N`;
+
+				const [rawInfo] = await doCrawler(page, url);
+				const extractInfo = [];
+				let info = false;
+				try {
+					console.log(rawInfo.length);
+					if (rawInfo) {
+						const travelDate = {
+							fromYear,
+							toYear,
+							fromMonth,
+							fromDay,
+							toMonth,
+							toDay
+						};
+						rawInfo.forEach((rawItem) => {
+							// 提取 Expedia 機票資訊
+							info = extractFlightInfo(rawItem, travelDate);
+							if (info) {
+								extractInfo.push(info);
+							}
+						});
+						// 寫回csv
+						console.log(extractInfo);
+						if (extractInfo.length > 0) {
+							if (type === "OpenJaw") {
+								dest = [
+									fromCode.split("-")[0],
+									toCode.split("-")[0],
+									toTwoCode.split("-")[0],
+									endCode.split("-")[0]
+								];
+							} else {
+								dest = [
+									fromCode.split("-")[0],
+									toCode.split("-")[0]
+								];
+							}
+							console.log(dest);
+							writeToCSV(extractInfo, dest, travelDate);
+
+							// console.log(extractInfo);
+							await page.waitForTimeout(
+								1000 + Math.random() * 5000
+							);
+						}
+					}
+				} catch (error) {
+					console.log(error, " 寫入發生錯誤");
+				}
+			}
+		}
+	}
+
+	// for (const date of dateTable){
+	//   for (const item of destinations)  {
+	//     to = item.to;
+	//     toCountry = item.toCountry;
+	//     toCode = item.toCode;
+
+	//     fromMonth = date.startM;
+	//     fromDay = date.startD;
+	//     toMonth = date.endM;
+	//     toDay = date.endD;
+	//     const url = `https://www.expedia.com.tw/Flights-Search?
+	//   flight-type=on&mode=search
+	//   &trip=roundtrip&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&
+	//   fromDate=${fromYear}/${fromMonth}/${fromDay}&toDate=${toYear}/${toMonth}/${toDay}&d1=${fromYear}-${fromMonth}-${fromDay}&d2=${toYear}-${toMonth}-${toDay}&passengers=adults:${adultNum},infantinlap:N`
+
+	// console.log(html);
+	//   const text = await page.evaluate(() => {
+	//     return new XMLSerializer().serializeToString(document);
+	// });
+	// console.log(text);
+	//   }
+
+	// }
+	await browser.close();
 };
 
-const doCrawler = async(page, url) => {
-  
+const doCrawler = async (page, url) => {
+	// const page = await browser.newPage();
+	console.log("doCrawler  ----------------");
+	try {
+		await page.goto(url, { waitUntil: "load" });
 
-  // const page = await browser.newPage();
-  console.log('doCrawler  ----------------');
-  try{
-    await page.goto(url,{waitUntil: 'load'});
-    
-    
-    await page.waitForSelector('.uitk-card-link');
-    
+		await page.waitForSelector(".uitk-card-link");
 
-    
-    const extractInfo = []
-    const rawInfo =  await page.
-    $$eval('.uitk-card-link', elements => 
-    elements.slice(0, 3).map(el => el.querySelector('span:first-child').textContent)
-    );
-    // console.log('rawInfo*****************------------------------------*****************');
-    // console.log(rawInfo);
+		const extractInfo = [];
+		const rawInfo = await page.$$eval(".uitk-card-link", (elements) =>
+			elements
+				.slice(0, 3)
+				.map((el) => el.querySelector("span:first-child").textContent)
+		);
+		// console.log('rawInfo*****************------------------------------*****************');
+		// console.log(rawInfo);
 
-    return [rawInfo];
-
-
-  }catch(error) {
-    console.log('發生錯誤拉 ',error);
-    return [];
-  }
-
-}
+		return [rawInfo];
+	} catch (error) {
+		console.log("發生錯誤拉 ", error);
+		return [];
+	}
+};
 // `https://www.expedia.com.tw/Flights-Search?
 // flight-type=on&mode=search
 // &trip=roundtrip&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&
@@ -404,8 +377,6 @@ const doCrawler = async(page, url) => {
 // departure:2024/3/26TANYT&
 // mode=search&options=carrier:,cabinclass:,maxhops:1,nopenalty:N&pageId=0&passengers=adults:1,children:0,infantinlap:N&trip=multi`
 
-
-
 // `https://www.expedia.com.tw/Flights-Search?
 // flight-type=on&mode=search
 // &trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${ toCountry }(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${to}, ${toCountry} (${toCode}),to:${from}, ${fromCountry} (${fromCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&
@@ -415,8 +386,6 @@ const doCrawler = async(page, url) => {
 // flight-type=on&mode=search
 // &trip=multi&leg1=from:Taipei, Taiwan (TPE-Taoyuan Intl.),to:Zürich, Switzerland (ZRH),departure:2023/12/2TANYT&leg2=from:Zagreb, Croatia (ZAG),to:Taipei, Taiwan (TPE-Taoyuan Intl.),departure:2024/1/25TANYT&options=cabinclass:economy&
 // fromDate=2023/12/2&d1=2023-12-2&passengers=adults:1,infantinlap:N`
-
-
 
 // 'sec-ch-ua': '"Chromium";v="122", " Not A;Brand";v="99", "Google Chrome";v="122"',
 //   'accept-language': 'en-US,en;q=0.9',
