@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../utility/db/databaseConnect')
 
 const userNotification = sequelize.define('userNotification', {
-    // 每個人可以有多個訂閱
+
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,

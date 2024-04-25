@@ -115,6 +115,7 @@ function indexData(data, type) {
         }
         
         // const dateIndex = item.date_1 + '-' + item.date_2;
+        // 用來記錄有哪些時間區段
         dateSet[firstLevelIndex] = true;        
         
         if(!acc[firstLevelIndex][secondLevelIndex]){

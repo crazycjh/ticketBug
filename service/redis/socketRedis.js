@@ -4,4 +4,9 @@ const redis = require('redis');
 const socketList = redis.createClient();
 socketList.connect();
 
+socketList.on('connect', async() => {
+    console.log('清空 socketList')
+    await socketList.flushAll();
+})
+
 exports.socketList = socketList 

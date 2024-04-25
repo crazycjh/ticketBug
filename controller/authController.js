@@ -27,6 +27,27 @@ const signToken = ( email ) => {
     )
 } 
 
+exports.tokenCheck = (req, res, next) => {
+    const token = req.cookies['jwt'];
+    console.log('tokenCheck');
+    jwt.verify(token, secretKey, (err, data) => {
+        if (err) {
+          return res.status(403).send({ message: 'Invalid token' });
+        }
+        // 将用户信息附加到请求对象上，以便后续中间件或请求处理器使用
+        req.user = data.email;
+        console.log('verify');
+        next();
+    });
+
+    // 無token
+
+    // 有token，但是invalid
+
+    // 驗證無誤
+    // next();
+}
+
 const createSendToken = ( email, statusCode, res ) => {
     const token = signToken( email );
     
@@ -48,6 +69,8 @@ const createSendToken = ( email, statusCode, res ) => {
     res.status(statusCode).redirect('http://localhost:5173/membercenter');
 
 }
+
+
 
 exports.googleAuth = (req, res) => {
     const scopes = [
@@ -100,6 +123,16 @@ exports.googleAuthCallback = async(req, res) => {
 
     
 
+}
+
+exports.logout = (req, res) => {
+    res.clearCookie('jwt'); 
+    res.status(200).json({
+        status: 'success',
+        data: {
+            message: 'logout'
+        }
+    });
 }
 
 async function findUser(email) {

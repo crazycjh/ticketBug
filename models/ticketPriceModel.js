@@ -26,7 +26,8 @@ const ticketPrice = sequelize.define('ticketPrice', {
     price: DataTypes.INTEGER,
     source: DataTypes.STRING,
     layover_info: DataTypes.STRING,
-    url: DataTypes.STRING
+    url: DataTypes.STRING,
+    isPublished:DataTypes.BOOLEAN
     // metadata: {
     //     type: DataTypes.JSON
     // }

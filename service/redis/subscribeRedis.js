@@ -4,4 +4,9 @@ const redis = require('redis');
 const subscriber = redis.createClient();
 subscriber.connect();
 
+subscriber.on('connect', async() => {
+    console.log('清空subscriber')
+    subscriber.flushAll();
+})
+
 exports.subscriber = subscriber
