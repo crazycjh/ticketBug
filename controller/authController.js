@@ -29,14 +29,14 @@ const signToken = ( email ) => {
 
 exports.tokenCheck = (req, res, next) => {
     const token = req.cookies['jwt'];
-    console.log('tokenCheck');
+    // console.log('tokenCheck');
     jwt.verify(token, secretKey, (err, data) => {
         if (err) {
-          return res.status(403).send({ message: 'Invalid token' });
+            return res.status(403).send({ message: 'Invalid token' });
         }
         // 将用户信息附加到请求对象上，以便后续中间件或请求处理器使用
         req.user = data.email;
-        console.log('verify');
+        // console.log('verify');
         next();
     });
 

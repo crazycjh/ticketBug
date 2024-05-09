@@ -17,14 +17,13 @@ const {getAirportCode} = require('./airPortCode');
       toCode.push(getAirportCode(item))
 
     });
-
     // console.log(dateTable, [fromCode, toCode])
     crawler(dateTable, 'RoundTrip', [fromCode, toCode]);
 
     res.status(200).json({
       status: 'success',
       data: {
-        message:'runing'
+        message: 'running'
       }
     });
 
@@ -60,12 +59,10 @@ exports.sequenceOpenJawDate = function(req, res, next) {
     item.forEach((city)=> {
       couple.push(getAirportCode(city));
     })
-    console.log(couple);
-    console.log('couple');
+
     toCode.push(couple);
   });
-  console.log('fromCode');
-  console.log(fromCode);
+
   crawler(dateTable, 'OpenJaw', [fromCode, toCode, endCode]); 
   
   

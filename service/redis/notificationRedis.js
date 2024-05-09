@@ -1,9 +1,9 @@
 const redis = require('redis');
-const notificationListRedis = redis.createClient();
+const {redisUrl} = require('./redisConfig');
+const notificationListRedis = redis.createClient(redisUrl);
 
 async function readNotificationList(email) {
     try{
-        
         await notificationListRedis.connect();
 
         const channelId = `notifications:${email}`;
@@ -19,8 +19,6 @@ async function readNotificationList(email) {
     }catch(error) {
 
     }
-    
-    
 }
 
 async function checkRedisList(email) {

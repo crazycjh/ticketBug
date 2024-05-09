@@ -91,7 +91,7 @@ const airportCode =
  
 exports.getAirportCode = (code)=> {
     let cityCode = ''
-    console.log(code);
+    // console.log(code);
     cityCode = airportCode.find(item => item.code.toLowerCase().includes(code.toLowerCase()) )
     if ( cityCode ) {
       return cityCode
@@ -101,6 +101,7 @@ exports.getAirportCode = (code)=> {
 }
 
 exports.CityToAirportCode = (city)=> {
+  // console.log(city);
   let cityCode = airportCode.find((item)=> item.city === city)
   return cityCode.code.split('-')[0].trim();
 }

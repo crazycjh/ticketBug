@@ -24,10 +24,10 @@ exports.dayliyPushNotification = async function () {
 			"date_1",
 			"date_2",
 			"type",
-			"price"
+			"price",
 		],
 		where: { isPublished: false },
-		raw: true
+		raw: true,
 		// 把尚未推播的抓出來
 	});
 
@@ -53,12 +53,10 @@ exports.dayliyPushNotification = async function () {
 						airport_4: item.airport_4,
 						month_1,
 						month_2,
-						type: item.type
+						type: item.type,
 					},
-					raw: true
+					raw: true,
 				});
-				console.log("notifyUsers");
-				console.log(notifyUsers);
 
 				if (notifyUsers.length > 0) {
 					// 如果有找到，就去該使用者的userNotification表寫入通知
@@ -66,7 +64,7 @@ exports.dayliyPushNotification = async function () {
 						const resp = userNotification.create({
 							email: user.email,
 							notificationId: item.id,
-							createDate: item.createDate
+							createDate: item.createDate,
 						});
 						// 對該使用者設定未讀，讓離線的使用者在登入時可以抓取到這個欄位，顯示有新通知
 						// UserInfo.update(
@@ -80,12 +78,12 @@ exports.dayliyPushNotification = async function () {
 							pushWaitingList[user.email]["amount"] =
 								pushWaitingList[user.email]["amount"] + 1;
 							pushWaitingList[user.email]["notification"].push(
-								item
+								item,
 							);
 						} else {
 							pushWaitingList[user.email] = {
 								amount: 1,
-								notification: [item]
+								notification: [item],
 							};
 						}
 					}
@@ -93,7 +91,7 @@ exports.dayliyPushNotification = async function () {
 				// 把被推播的entry設定為true，代表已經已經推播或是把通知寫到資料庫，等著使用者連線來抓取
 				ticketNotifyList.update(
 					{ isPublished: true },
-					{ where: { isPublished: false } }
+					{ where: { isPublished: false } },
 				);
 			} else if (item.type === "1") {
 				// 處理開口票
@@ -104,11 +102,10 @@ exports.dayliyPushNotification = async function () {
 		Object.keys(pushWaitingList).forEach(async (email) => {
 			UserInfo.update(
 				{ unread: pushWaitingList[email]["amount"] },
-				{ where: { email: email } }
+				{ where: { email: email } },
 			);
 
 			const userIsOnline = await socketList.hGet("user_statuses", email);
-			console.log(email, " 是否在線 ", userIsOnline);
 			if (userIsOnline === "online") {
 				console.log(email, " 發出通知數量 ： ", pushWaitingList[email]);
 				publishNotification(email, pushWaitingList[email]);

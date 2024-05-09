@@ -1,7 +1,7 @@
 exports.extractFlightInfo = (str, travelDate) => {
     
     const {fromYear, toYear, fromMonth, fromDay, toMonth, toDay} = travelDate;
-
+    
     const airline = str.match(/for (.+?) flight/)[1];
     const departureTime = str.match(/departing at ([^ ]+)/)[1];
     const departureLocation = str.match(/from ([^,]+)/)[1];
@@ -23,5 +23,4 @@ exports.extractFlightInfo = (str, travelDate) => {
     else {
         return false;
     }
-    
 }

@@ -9,7 +9,10 @@ const { CityToAirportCode } = require("./airPortCode");
 
 const { extractFlightInfo } = require("./handleRawDate");
 const { createNotifyList } = require("../utility/notification/useNotification");
-const { roundTripCrawler } = require("../flightCrawler/roundTripOpenJawCrawler");
+const {
+	roundTripCrawler,
+	openJawCrawler,
+} = require("../flightCrawler/roundTripOpenJawCrawler");
 
 puppeteer.use(StealthPlugin());
 
@@ -28,7 +31,7 @@ exports.crawler = async (dateTable, type, cities = []) => {
 			// executablePath:
 			//   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // 替换为你的 Chrome 可执行文件的路径
 			executablePath: chromium.path,
-			args: ["--no-sandbox"]
+			args: ["--no-sandbox"],
 			// headless: false, // 根据需要设置为 true 或 false
 
 			// executablePath:executablePath(),
@@ -98,7 +101,7 @@ exports.crawler = async (dateTable, type, cities = []) => {
 	let currentDateString = `${year}${month}${day}`;
 
 	if (type === "RoundTrip") {
-    await roundTripCrawler(cities, dateTable, page);
+		await roundTripCrawler(cities, dateTable, page);
 		// let [fromCity, toCity] = cities;
 
 		// for (const date of dateTable) {
@@ -230,86 +233,87 @@ exports.crawler = async (dateTable, type, cities = []) => {
 		// 	}
 		// }
 	} else if (type === "OpenJaw") {
-		let [fromCity, toCity, endCity] = cities;
-		console.log(cities);
-		console.log(dateTable);
-		for (const date of dateTable) {
-			fromYear = date.startY;
-			fromMonth = date.startM;
-			fromDay = date.startD;
-			toYear = date.endY;
-			toMonth = date.endM;
-			toDay = date.endD;
+		await openJawCrawler(cities, dateTable, page);
+		// 	let [fromCity, toCity, endCity] = cities;
+		// 	console.log(cities);
+		// 	console.log(dateTable);
+		// 	for (const date of dateTable) {
+		// 		fromYear = date.startY;
+		// 		fromMonth = date.startM;
+		// 		fromDay = date.startD;
+		// 		toYear = date.endY;
+		// 		toMonth = date.endM;
+		// 		toDay = date.endD;
 
-			from = fromCity.city;
-			fromCountry = fromCity.country;
-			fromCode = fromCity.code;
+		// 		from = fromCity.city;
+		// 		fromCountry = fromCity.country;
+		// 		fromCode = fromCity.code;
 
-			end = endCity.city;
-			endCountry = endCity.country;
-			endCode = endCity.code;
+		// 		end = endCity.city;
+		// 		endCountry = endCity.country;
+		// 		endCode = endCity.code;
 
-			for (const item of toCity) {
-				to = item[0].city;
-				toCountry = item[0].country;
-				toCode = item[0].code;
-				toTwo = item[1].city;
-				toTwoCountry = item[1].country;
-				toTwoCode = item[1].code;
+		// 		for (const item of toCity) {
+		// 			to = item[0].city;
+		// 			toCountry = item[0].country;
+		// 			toCode = item[0].code;
+		// 			toTwo = item[1].city;
+		// 			toTwoCountry = item[1].country;
+		// 			toTwoCode = item[1].code;
 
-				const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&langid=1033&trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${toCountry}(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${toTwo},${toTwoCountry}(${toTwoCode}),to:${end}, ${endCountry} (${endCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&d1=${toYear}-${toMonth}-${toDay}&passengers=adults:1,infantinlap:N`;
+		// 			const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&langid=1033&trip=multi&leg1=from:${from}, ${fromCountry} (${fromCode}),to:${to},${toCountry}(${toCode}),departure:${fromYear}/${fromMonth}/${fromDay}TANYT&leg2=from:${toTwo},${toTwoCountry}(${toTwoCode}),to:${end}, ${endCountry} (${endCode}),departure:${toYear}/${toMonth}/${toDay}TANYT&options=cabinclass:economy&fromDate=${fromYear}/${fromMonth}/${fromDay}&d1=${toYear}-${toMonth}-${toDay}&passengers=adults:1,infantinlap:N`;
 
-				const [rawInfo] = await doCrawler(page, url);
-				const extractInfo = [];
-				let info = false;
-				try {
-					console.log(rawInfo.length);
-					if (rawInfo) {
-						const travelDate = {
-							fromYear,
-							toYear,
-							fromMonth,
-							fromDay,
-							toMonth,
-							toDay
-						};
-						rawInfo.forEach((rawItem) => {
-							// 提取 Expedia 機票資訊
-							info = extractFlightInfo(rawItem, travelDate);
-							if (info) {
-								extractInfo.push(info);
-							}
-						});
-						// 寫回csv
-						console.log(extractInfo);
-						if (extractInfo.length > 0) {
-							if (type === "OpenJaw") {
-								dest = [
-									fromCode.split("-")[0],
-									toCode.split("-")[0],
-									toTwoCode.split("-")[0],
-									endCode.split("-")[0]
-								];
-							} else {
-								dest = [
-									fromCode.split("-")[0],
-									toCode.split("-")[0]
-								];
-							}
-							console.log(dest);
-							writeToCSV(extractInfo, dest, travelDate);
+		// 			const [rawInfo] = await doCrawler(page, url);
+		// 			const extractInfo = [];
+		// 			let info = false;
+		// 			try {
+		// 				console.log(rawInfo.length);
+		// 				if (rawInfo) {
+		// 					const travelDate = {
+		// 						fromYear,
+		// 						toYear,
+		// 						fromMonth,
+		// 						fromDay,
+		// 						toMonth,
+		// 						toDay
+		// 					};
+		// 					rawInfo.forEach((rawItem) => {
+		// 						// 提取 Expedia 機票資訊
+		// 						info = extractFlightInfo(rawItem, travelDate);
+		// 						if (info) {
+		// 							extractInfo.push(info);
+		// 						}
+		// 					});
+		// 					// 寫回csv
+		// 					console.log(extractInfo);
+		// 					if (extractInfo.length > 0) {
+		// 						if (type === "OpenJaw") {
+		// 							dest = [
+		// 								fromCode.split("-")[0],
+		// 								toCode.split("-")[0],
+		// 								toTwoCode.split("-")[0],
+		// 								endCode.split("-")[0]
+		// 							];
+		// 						} else {
+		// 							dest = [
+		// 								fromCode.split("-")[0],
+		// 								toCode.split("-")[0]
+		// 							];
+		// 						}
+		// 						console.log(dest);
+		// 						writeToCSV(extractInfo, dest, travelDate);
 
-							// console.log(extractInfo);
-							await page.waitForTimeout(
-								1000 + Math.random() * 5000
-							);
-						}
-					}
-				} catch (error) {
-					console.log(error, " 寫入發生錯誤");
-				}
-			}
-		}
+		// 						// console.log(extractInfo);
+		// 						await page.waitForTimeout(
+		// 							1000 + Math.random() * 5000
+		// 						);
+		// 					}
+		// 				}
+		// 			} catch (error) {
+		// 				console.log(error, " 寫入發生錯誤");
+		// 			}
+		// 		}
+		// 	}
 	}
 
 	// for (const date of dateTable){

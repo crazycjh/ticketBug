@@ -3,7 +3,7 @@ const { Op, Sequelize } = require("sequelize");
 
 
 const cheapTicketList = async(req, res, next) => {
-    console.log(req.query.type);
+    console.log(req.query);
 
 //    
 
@@ -14,33 +14,46 @@ const cheapTicketList = async(req, res, next) => {
     let airportSet = [];
     let indexedData = [] ;
     let dateSet = [];
-    
+    let whereCondition = {}
 
     switch (req.query.type) {
         case '0':
-            let whereCondition = {
-                type: 0
+            whereCondition.type = 0;
+            // whereCondition  加入 date_1 和 date_2 的 where 條件 date_1 只有年月但是在database是年月日，只要篩選年月就可以了
+            whereCondition.date_1 = {[Op.gte]: `${req.query.date1}%`};
+            whereCondition.date_2 = {[Op.lte]: `${req.query.date2}%`};
+            // console.log(whereCondition);
+            if (!req.query.anywhere) {
+                if (req.query.airport1) {
+                    whereCondition.airport_1 = req.query.airport1;
+                    console.log("req.query.airport1");
+                    // console.log(req.query.airport1);
+
+                } else {
+                    // console.log("attributesAirport airport1");
+                    attributesAirport = [[Sequelize.fn("DISTINCT", Sequelize.col("airport_1")), "airport"]];
+                }
+                if (req.query.airport2) {
+                    // console.log(req.query.airport2);
+                    // console.log("req.query.flushairport2");
+                    whereCondition.airport_2 = req.query.airport2;
+                } else {
+                    // console.log("attributesAirport airport2");
+                    attributesAirport = [[Sequelize.fn("DISTINCT", Sequelize.col("airport_2")), "airport"]];
+                }
             }
             if(!req.query.anywhere) {
                 if(req.query.airport1) {
                     whereCondition.airport_1 = req.query.airport1
-                    console.log('req.query.airport1');
-                    console.log(req.query.airport1);
-                    
                 }else {
-                    console.log('attributesAirport airport1');
                     attributesAirport =[[Sequelize.fn('DISTINCT', Sequelize.col('airport_1')), 'airport']]
                 }
                 if(req.query.airport2) {
-                    console.log(req.query.airport2);
-                    console.log('req.query.airport2');
                     whereCondition.airport_2 = req.query.airport2
                 }else {
-                    console.log('attributesAirport airport2');
                     attributesAirport = [[Sequelize.fn('DISTINCT', Sequelize.col('airport_2')), 'airport']]
                 }
             }
-            
 
             queryAttributes = {
                 attributes: ['id', 'airport_1', 'airport_2', 'airport_3',  'airport_4', 'date_1', 'date_2', 'price', 'type','layover_info' ,'createDate'],
@@ -52,7 +65,6 @@ const cheapTicketList = async(req, res, next) => {
             data = await ticketPrice.findAll( queryAttributes )
             const returnValue = indexData(data,0);
             [indexedData, dateSet] = returnValue;
-            console.log(dateSet);
             // 取得 機場列表
             if((!req.query.airport1 && req.query.airport2) || (req.query.airport1 && !req.query.airport2)) {
                 queryAttributes = {
@@ -77,7 +89,7 @@ const cheapTicketList = async(req, res, next) => {
         case '2':
             break;
         default:
-            break;        
+            break;
     }
     
     // const resp = await ticketPrice.findAll({

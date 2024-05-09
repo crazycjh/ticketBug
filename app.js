@@ -67,10 +67,10 @@ try {
 		);
 		// }, 2000)
 		console.log("websocket 連線成功");
-
+		let email;
 		ws.on("message", async function message(data) {
 			const clientData = JSON.parse(data);
-			const email = clientData.email;
+			email = clientData.email;
 			console.log("收到message from client ", clientData);
 			// 這裡會有唯一的client傳過來message，會是傳遞使用者名稱
 			if (email) {
@@ -96,7 +96,7 @@ try {
 					subscriber.unsubscribe();
 					console.log("unsubscribe");
 					// 把登入狀態移除
-					// socketList.hDel('user_statuses', email);
+					socketList.hDel('user_statuses', email);
 				}
 			} catch (error) {
 				console.error(error, " 發生錯誤");
