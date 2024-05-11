@@ -14,7 +14,7 @@ const { subscriber } = require("./service/redis/subscribeRedis");
 const { socketList } = require("./service/redis/socketRedis");
 
 const {
-	dailyPushNotification
+	dailyPushNotification,
 } = require("./service/scheduler/pushNotification");
 
 const rateLimit = require("express-rate-limit");
@@ -38,8 +38,8 @@ const triggerRoutes = require("./routes/triggerRouters");
 const app = express();
 const server = http.createServer(app);
 const corsOptions = {
-	origin: ["http://localhost:5173, https://tickbug-frontend.zeabur.app"],
-	credentials: true
+	origin: ["http://localhost:5173", "https://tickbug-frontend.zeabur.app"],
+	credentials: true,
 };
 // 1) Global MIDDLEWARES
 app.use(helmet());
@@ -62,8 +62,8 @@ try {
 		ws.send(
 			JSON.stringify({
 				type: "MESSAGE",
-				message: "Welcome to the WebSocket Server"
-			})
+				message: "Welcome to the WebSocket Server",
+			}),
 		);
 		// }, 2000)
 		console.log("websocket 連線成功");
@@ -96,7 +96,7 @@ try {
 					subscriber.unsubscribe();
 					console.log("unsubscribe");
 					// 把登入狀態移除
-					socketList.hDel('user_statuses', email);
+					socketList.hDel("user_statuses", email);
 				}
 			} catch (error) {
 				console.error(error, " 發生錯誤");
