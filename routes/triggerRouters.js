@@ -9,7 +9,7 @@ router.get('/doNotify', tmpNotification)
 
 function tmpNotification(req, res) {
     console.log('tmpNotification');
-    pushNotification.dayliyPushNotification();
+    pushNotification.dailyPushNotification();
 
     res.status(200).json({
         status: 'success',

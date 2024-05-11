@@ -37,7 +37,7 @@ exports.roundTripCrawler = async (cities, dateTable, page) => {
 			let toCode = item.code;
 			const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&trip=roundtrip&langid=1033&leg1=from:${fromC}, ${fromCountry} (${fromCode}),to:${toC},${toCountry}(${toCode}),departure:${from.fromYear}/${from.fromMonth}/${from.fromDay}TANYT&leg2=from:${toC}, ${toCountry} (${toCode}),to:${fromC}, ${fromCountry} (${fromCode}),departure:${to.toYear}/${to.toMonth}/${to.toDay}TANYT&options=cabinclass:economy&fromDate=${from.fromYear}/${from.fromMonth}/${from.fromDay}&toDate=${to.toYear}/${to.toMonth}/${to.toDay}&d1=${from.fromYear}-${from.fromMonth}-${from.fromDay}&d2=${to.toYear}-${to.toMonth}-${to.toDay}&passengers=adults:${adultNum},infantinlap:N`;
 			const extractInfo = [];
-      console.log('doCrawller');
+      		// console.log('doCrawller');
 			const [rawInfo] = await doCrawler(page, url);
 
 			try {
@@ -61,7 +61,7 @@ exports.roundTripCrawler = async (cities, dateTable, page) => {
 					// 寫回csv
 
 					if (extractInfo.length > 0) {
-						console.log(extractInfo[0]);
+						// console.log(extractInfo[0]);
 						// if(type==="OpenJaw"){
 						//   dest = [fromCode.split("-")[0], toCode.split("-")[0], toTwoCode.split("-")[0]];
 						// }else {
@@ -70,9 +70,9 @@ exports.roundTripCrawler = async (cities, dateTable, page) => {
 
 						// writeToCSV(extractInfo, dest, travelDate);
 
-						console.log("dododododod-----");
+						// console.log("dododododod-----");
 
-						console.log(extractInfo[0].layoverInfo);
+						// console.log(extractInfo[0].layoverInfo);
 						try {
 							let airport_1;
 							let airport_2;
@@ -84,7 +84,6 @@ exports.roundTripCrawler = async (cities, dateTable, page) => {
 							let source;
 
 							for (const item of extractInfo) {
-                console.log(item);
 								airport_1 = CityToAirportCode(
 									item.departureLocation
 								);

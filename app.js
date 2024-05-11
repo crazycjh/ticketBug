@@ -14,7 +14,7 @@ const { subscriber } = require("./service/redis/subscribeRedis");
 const { socketList } = require("./service/redis/socketRedis");
 
 const {
-	dayliyPushNotification
+	dailyPushNotification
 } = require("./service/scheduler/pushNotification");
 
 const rateLimit = require("express-rate-limit");
@@ -38,7 +38,7 @@ const triggerRoutes = require("./routes/triggerRouters");
 const app = express();
 const server = http.createServer(app);
 const corsOptions = {
-	origin: "http://localhost:5173",
+	origin: ["http://localhost:5173, https://ticketbug.zeabur.app"],
 	credentials: true
 };
 // 1) Global MIDDLEWARES
@@ -50,9 +50,9 @@ app.use(cookieParser());
 //   app.use(morgan('dev'));
 // }
 // 執行每日推播
-// dayliyPushNotification();
+// dailyPushNotification();
 cron.schedule("*/10 * * * * *", () => {
-	// dayliyPushNotification();
+	// dailyPushNotification();
 });
 // 建立WebSocket
 const wss = new WebSocketServer({ server });

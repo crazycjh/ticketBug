@@ -10,7 +10,7 @@ const { socketList } = require("../redis/socketRedis");
 const { publishNotification } = require("../redis/redis");
 
 // TODO 要把全部確認完才去發送通知，而且是發送通知數量
-exports.dayliyPushNotification = async function () {
+exports.dailyPushNotification = async function () {
 	// 抓取database便宜機票列表
 	console.log("做推播");
 	const notifyList = await ticketNotifyList.findAll({
@@ -120,5 +120,5 @@ exports.dayliyPushNotification = async function () {
 };
 
 // cron.schedule('*/5 * * * * *', () => {
-//     dayliyPushNotification();
+//     dailyPushNotification();
 // });
