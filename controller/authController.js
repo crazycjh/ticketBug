@@ -48,7 +48,7 @@ exports.tokenCheck = (req, res, next) => {
     // next();
 }
 
-const createSendToken = ( email, statusCode, res, host ) => {
+const createSendToken = ( email, statusCode, res ) => {
     const token = signToken( email );
 
     // 設定回傳Cookie的options
@@ -65,8 +65,7 @@ const createSendToken = ( email, statusCode, res, host ) => {
     res.cookie('jwt', token, cookieOptions);
     res.cookie('isLogin', true);
     res.cookie('email', email);
-
-    res.status(statusCode).redirect(`http://${host}/membercenter`); 
+    res.status(statusCode).redirect(`http://${process.env.CLIENT_REDIRECT_URI}/membercenter`);
 
 }
 
@@ -86,7 +85,6 @@ exports.googleAuth = (req, res) => {
 exports.googleAuthCallback = async(req, res) => {
     let statusCode;
     const code = req.query.code;
-    const host = req.headers.host;  // 获取域名和端口（如果指定）
     // get access token
     const {tokens} = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
@@ -116,7 +114,7 @@ exports.googleAuthCallback = async(req, res) => {
         statusCode = 200;
     }
 
-    createSendToken(me.data.emailAddresses[0].value, statusCode, res, host);
+    createSendToken(me.data.emailAddresses[0].value, statusCode, res);
     // console.log(me.data.emailAddresses[0].value);
 
 
