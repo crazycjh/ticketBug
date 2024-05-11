@@ -65,7 +65,7 @@ const createSendToken = ( email, statusCode, res ) => {
     res.cookie('jwt', token, cookieOptions);
     res.cookie('isLogin', true);
     res.cookie('email', email);
-    res.status(statusCode).redirect(`http://${process.env.CLIENT_REDIRECT_URI}/membercenter`);
+    res.status(statusCode).redirect(`${process.env.CLIENT_REDIRECT_URI}`);
 
 }
 
