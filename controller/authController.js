@@ -19,13 +19,13 @@ const oAuth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECR
 // 建立JWT
 const signToken = ( email ) => {
     return jwt.sign(
-        { email }, 
-        secretKey, 
+        { email },
+        secretKey,
         {
-            expiresIn:process.env.JWT_EXPIRES_IN
+            expiresIn: process.env.JWT_EXPIRES_IN
         }
     )
-} 
+}
 
 exports.tokenCheck = (req, res, next) => {
     const token = req.cookies['jwt'];
@@ -48,15 +48,15 @@ exports.tokenCheck = (req, res, next) => {
     // next();
 }
 
-const createSendToken = ( email, statusCode, res ) => {
+const createSendToken = ( email, statusCode, res, host ) => {
     const token = signToken( email );
-    
+
     // 設定回傳Cookie的options
     const cookieOptions = {
         expires: new Date(
             Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
         ),
-        httpOnly:true
+        httpOnly: true
     }
 
     // 產品模式改成HTTPS
@@ -65,11 +65,10 @@ const createSendToken = ( email, statusCode, res ) => {
     res.cookie('jwt', token, cookieOptions);
     res.cookie('isLogin', true);
     res.cookie('email', email);
-    
-    res.status(statusCode).redirect('http://localhost:5173/membercenter');
+
+    res.status(statusCode).redirect(`http://${host}/membercenter`); 
 
 }
-
 
 
 exports.googleAuth = (req, res) => {
@@ -87,7 +86,7 @@ exports.googleAuth = (req, res) => {
 exports.googleAuthCallback = async(req, res) => {
     let statusCode;
     const code = req.query.code;
-    
+    const host = req.headers.host;  // 获取域名和端口（如果指定）
     // get access token
     const {tokens} = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
@@ -103,30 +102,28 @@ exports.googleAuthCallback = async(req, res) => {
     // 使用者相關帳號建立或是讀取資料
     // 確認是否已經存在
 
-    
 
     // 存在/不存在都回傳相關帳號資料
     const result = await findUser(me.data.emailAddresses[0].value)
-    
+
     //不存在 -> 建立帳號
     if(!result) {
         createAccountByGoogleLogin(me.data.emailAddresses[0].value)
         // 創建新的
         statusCode = 201;
-        
+
     }else {
         statusCode = 200;
     }
-    
-    createSendToken(me.data.emailAddresses[0].value, statusCode, res);
+
+    createSendToken(me.data.emailAddresses[0].value, statusCode, res, host);
     // console.log(me.data.emailAddresses[0].value);
 
-    
 
 }
 
 exports.logout = (req, res) => {
-    res.clearCookie('jwt'); 
+    res.clearCookie('jwt');
     res.status(200).json({
         status: 'success',
         data: {
@@ -142,7 +139,7 @@ async function findUser(email) {
 // const jane = await User.create({ firstName: "Jane", lastName: "Doe" });
 function createAccountByGoogleLogin(email) {
     // 建立base on Google登入的帳號，密碼會是空的，下次使用者可以透過忘記密碼幫忙建立一個，再由使用者修改，或是進到設定設定密碼
-    const result = UserInfo.create({ email:email, google:true})
+    const result = UserInfo.create({ email: email, google: true})
 }
 
 // 建立使用者
