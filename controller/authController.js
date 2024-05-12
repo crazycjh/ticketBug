@@ -69,13 +69,13 @@ const createSendToken = (email, statusCode, res) => {
 		cookieOptions.sameSite = "None";
 		cookieOptions.path = "/";
 		cookieOptions.domain = "tickbug-frontend.zeabur.app";
-		
-        cookieOptionOther.secure= true,
-		cookieOptionOther.sameSite= "None",
-		cookieOptionOther.path= "/",
-		cookieOptionOther.domain= "tickbug-frontend.zeabur.app",
+
+        cookieOptionOther.secure= true;
+		cookieOptionOther.sameSite= "None";
+		cookieOptionOther.path= "/";
+		cookieOptionOther.domain= "tickbug-frontend.zeabur.app";
 	}
-	
+
 	res.cookie("jwt", token, cookieOptions);
 	res.cookie("isLogin", true, cookieOptionOther);
 	res.cookie("email", email, cookieOptionOther);
