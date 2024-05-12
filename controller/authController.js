@@ -68,12 +68,12 @@ const createSendToken = (email, statusCode, res) => {
 		cookieOptions.secure = true;
 		cookieOptions.sameSite = "None";
 		cookieOptions.path = "/";
-		cookieOptions.domain = ".zeabur.app";
+		cookieOptions.domain = process.env.DOMAIN;
 
         cookieOptionOther.secure= true;
 		cookieOptionOther.sameSite= "None";
 		cookieOptionOther.path= "/";
-		cookieOptionOther.domain= ".zeabur.app";
+		cookieOptionOther.domain= process.env.DOMAIN;
 	}
 
 	res.cookie("jwt", token, cookieOptions);
