@@ -63,7 +63,8 @@ const createSendToken = ( email, statusCode, res ) => {
     if(process.env.NODE_ENV === 'production') {
         cookieOptions.secure = true;
         cookieOptions.sameSite = 'None';
-        cookieOptions.path='/'
+        cookieOptions.path='/';
+        cookieOptions.domain='tickbug-frontend.zeabur.app';
     }
 
     res.cookie('jwt', token, cookieOptions);
