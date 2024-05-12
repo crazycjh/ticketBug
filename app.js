@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const cron = require("node-cron");
+const fs = require('fs');
 
 // websocket
 const { WebSocketServer } = require("ws");
@@ -37,9 +38,10 @@ const triggerRoutes = require("./routes/triggerRouters");
 
 const app = express();
 const server = http.createServer(app);
+
 const corsOptions = {
 	origin: ["http://localhost:5173", "https://tickbug-frontend.zeabur.app"],
-	credentials: true,
+	credentials: true
 };
 // 1) Global MIDDLEWARES
 app.use(helmet());

@@ -60,11 +60,15 @@ const createSendToken = ( email, statusCode, res ) => {
     }
 
     // 產品模式改成HTTPS
-    if(process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+    if(process.env.NODE_ENV === 'production') {
+        cookieOptions.secure = true;
+        cookieOptions.sameSite = 'None';
+    }
 
     res.cookie('jwt', token, cookieOptions);
     res.cookie('isLogin', true);
     res.cookie('email', email);
+
     res.status(statusCode).redirect(`${process.env.CLIENT_REDIRECT_URI}`);
 
 }
