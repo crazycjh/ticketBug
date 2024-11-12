@@ -4,9 +4,6 @@ const { Op, Sequelize } = require("sequelize");
 
 const cheapTicketList = async(req, res, next) => {
     console.log(req.query);
-
-//    
-
     let queryAttributes;
     let attributesAirport = [];
     let data=[];
@@ -15,10 +12,13 @@ const cheapTicketList = async(req, res, next) => {
     let indexedData = [] ;
     let dateSet = [];
     let whereCondition = {}
-
+    let returnValue;
     switch (req.query.type) {
+        
         case '0':
+            // type 加上 1
             whereCondition.type = 0;
+
             // whereCondition  加入 date_1 和 date_2 的 where 條件 date_1 只有年月但是在database是年月日，只要篩選年月就可以了
             whereCondition.date_1 = {[Op.gte]: `${req.query.date1}%`};
             whereCondition.date_2 = {[Op.lte]: `${req.query.date2}%`};
@@ -54,7 +54,7 @@ const cheapTicketList = async(req, res, next) => {
                     attributesAirport = [[Sequelize.fn('DISTINCT', Sequelize.col('airport_2')), 'airport']]
                 }
             }
-
+            
             queryAttributes = {
                 attributes: ['id', 'airport_1', 'airport_2', 'airport_3',  'airport_4', 'date_1', 'date_2', 'price', 'type','layover_info' ,'createDate'],
                 where: whereCondition,
@@ -62,8 +62,10 @@ const cheapTicketList = async(req, res, next) => {
                     ['date_1', 'ASC'] // 根据 date_1 升序排序
                 ]
             }
-            data = await ticketPrice.findAll( queryAttributes )
-            const returnValue = indexData(data,0);
+            console.log(queryAttributes);
+            data = await ticketPrice.findAll( queryAttributes );
+            console.log(data);
+            returnValue = indexData(data,0);
             [indexedData, dateSet] = returnValue;
             // 取得 機場列表
             if((!req.query.airport1 && req.query.airport2) || (req.query.airport1 && !req.query.airport2)) {
@@ -71,14 +73,12 @@ const cheapTicketList = async(req, res, next) => {
                     attributes: attributesAirport,
                     where: whereCondition
                 }
-    
                 airportList = await ticketPrice.findAll( queryAttributes );
                 if(!req.query.airport1) {
-                    airportSet = {location :'航點 1', airportList : airportList};
+                    airportSet = {location:'航點 1', airportList: airportList};
                 }else {
-                    airportSet = {location :'航點 2', airportList : airportList};
+                    airportSet = {location:'航點 2', airportList: airportList};
                 }
-                
             }
             // data.map((item) => {
             //     item.airport_1
@@ -91,7 +91,6 @@ const cheapTicketList = async(req, res, next) => {
         default:
             break;
     }
-    
     // const resp = await ticketPrice.findAll({
     //     attributes: ['airport_1', 'airport_2', 'airport_3',  'airport_4', 'date_1', 'date_2', 'price'],
     //     where: {
@@ -102,7 +101,7 @@ const cheapTicketList = async(req, res, next) => {
     console.log(Object.keys(dateSet));
     res.status(200).json({
         status: 'success',
-        data:{data : indexedData, airportSet:airportSet, dateSet:Object.keys(dateSet)}
+        data: {data: indexedData, airportSet: airportSet, dateSet: Object.keys(dateSet)}
     });
 
 }

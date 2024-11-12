@@ -76,6 +76,14 @@ exports.sequenceOpenJawDate = function(req, res, next) {
 
 
 exports.test = function (req, res, next) {
+  // Set cookie with test data
+  res.cookie('testCookie', 'test value', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    domain: ".example.com"
+  });
   res.status(200).json({
     status:'success',
     data: {

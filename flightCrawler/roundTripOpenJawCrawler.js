@@ -37,7 +37,7 @@ exports.roundTripCrawler = async (cities, dateTable, page) => {
 			let toCode = item.code;
 			const url = `https://www.expedia.com.tw/Flights-Search?flight-type=on&mode=search&trip=roundtrip&langid=1033&leg1=from:${fromC}, ${fromCountry} (${fromCode}),to:${toC},${toCountry}(${toCode}),departure:${from.fromYear}/${from.fromMonth}/${from.fromDay}TANYT&leg2=from:${toC}, ${toCountry} (${toCode}),to:${fromC}, ${fromCountry} (${fromCode}),departure:${to.toYear}/${to.toMonth}/${to.toDay}TANYT&options=cabinclass:economy&fromDate=${from.fromYear}/${from.fromMonth}/${from.fromDay}&toDate=${to.toYear}/${to.toMonth}/${to.toDay}&d1=${from.fromYear}-${from.fromMonth}-${from.fromDay}&d2=${to.toYear}-${to.toMonth}-${to.toDay}&passengers=adults:${adultNum},infantinlap:N`;
 			const extractInfo = [];
-      		// console.log('doCrawller');
+			// console.log('doCrawller');
 			const [rawInfo] = await doCrawler(page, url);
 
 			try {
@@ -100,6 +100,7 @@ exports.roundTripCrawler = async (cities, dateTable, page) => {
 								date_2 = item.toDate;
 								price = item.price;
 								source = "Expedia";
+								// console.log(airport_1, airport_2, airport_3, airport_4);
 								const resp = await ticketPrice.create({
 									createDate: currentDateString,
 									airport_1,

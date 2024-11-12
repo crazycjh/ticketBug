@@ -40,7 +40,7 @@ const app = express();
 const server = http.createServer(app);
 
 const corsOptions = {
-	origin: ["http://localhost:5173", "https://tickbug-frontend.zeabur.app"],
+	origin: ["http://localhost:5173", "https://tickbug-frontend.zeabur.app", "http://frontend.example.com:5173"],
 	credentials: true
 };
 // 1) Global MIDDLEWARES

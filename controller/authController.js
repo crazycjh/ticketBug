@@ -65,21 +65,16 @@ const createSendToken = (email, statusCode, res) => {
 
 	// 產品模式改成HTTPS
 	if (process.env.NODE_ENV === "production") {
-		cookieOptions.secure = true;
+		// cookieOptions.secure = true;
 		cookieOptions.sameSite = "None";
 		cookieOptions.path = "/";
 		cookieOptions.domain = process.env.DOMAIN;
 
-        cookieOptionOther.secure= true;
-		cookieOptionOther.sameSite= "None";
-		cookieOptionOther.path= "/";
-		cookieOptionOther.domain= process.env.DOMAIN;
 	}
 
 	res.cookie("jwt", token, cookieOptions);
 	res.cookie("isLogin", true, cookieOptionOther);
 	res.cookie("email", email, cookieOptionOther);
-
 	res.status(statusCode).redirect(`${process.env.CLIENT_REDIRECT_URI}`);
 };
 
